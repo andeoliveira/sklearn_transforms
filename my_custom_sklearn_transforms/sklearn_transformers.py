@@ -41,10 +41,11 @@ class AlterValueColumn (BaseEstimator, TransformerMixin):
 
 # Classe FillMeasureByColumn completa uma coluna ou mais, com a média dos valor agrupados em uma característica
 class FillMeasureByColumn (BaseEstimator, TransformerMixin):
-    def __init__(self, columns, groupcolumn, trendmeasure):
+    def __init__(self, columns, groupcolumn=None, trendmeasure=None, columncopy=None):
         self.columns = columns
-        self.groupcolumn = groupcolumn
-        self.trendmeasure = trendmeasure
+        self.groupcolumn = groupcolumn if groupcolumn is not None else None
+        self.trendmeasure = trendmeasure if trendmeasure is not None else None
+        self.columncopy = columncopy if columncopy is not None else None
 
     def fit(self, X, y=None):
         return self
@@ -53,6 +54,9 @@ class FillMeasureByColumn (BaseEstimator, TransformerMixin):
         # Cópia do DF 
         data = X.copy()
         for feature_df in self.columns :
-            data[feature_df] = data.groupby(self.groupcolumn)[feature_df].transform(lambda x: x.fillna(x.mean()) if self.trendmeasure == 'mean' else x.fillna(x.mode()[0]))
+            if self.columncopy is None:
+                data[feature_df] = data.groupby(self.groupcolumn)[feature_df].transform(lambda x: x.fillna(x.mean()) if self.trendmeasure == 'mean' else x.fillna(x.mode()[0]))
+            else :
+                data[feature_df] = data[feature_df].transform(lambda x: x.fillna(data[self.columncopy]))
         # Retorna um novo data frame com a coluna preenchida
         return data
